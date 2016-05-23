@@ -1,0 +1,258 @@
+\ Ordinal Distinction Testing Procedure for the Boxes in Room 3067 20150213 Written by Adrian Rivas
+\ Without Correction trials
+\ *** Left Lever serves as the longer tone first response ***
+\ *** Supra-second Durations ***
+
+\---------------------------------- DECLARATIONS ----------------------------------
+
+\ INPUTS
+^LeftIn = 1
+^RightIn= 3
+
+\ OUTPUTS
+^LeftOut = 1
+^RightOut = 2
+^Food = 3
+^Light = 7
+^Tone = 6
+
+\ SOUND CONSTANTS
+^Freq = 0
+^Amp = 1
+^RF = 2
+^Dur = 3
+Dim U = 3
+
+\ DATA CONSTANTS
+^SessionTime = 7200
+
+^OLS = 10
+^OLL = 20
+^TLL = 30
+^TLS = 40
+^DUN = 600
+^ITI = 1
+^COR = 3
+^INC = 6
+^OMI = 9
+
+^ST = 2
+^LT = 5
+^GP = 4
+
+\ VARIABLES
+\ A = session timer
+\ B = all data
+\ C = events
+\ D = wait times
+\ E = ITIs
+\ F = counter
+\ G = right or left
+\ H = 50/50 generator
+\ L = short tone
+\ M = long tone
+\ N = inter tone wait
+\ O = grace period
+
+\ LIST AND DIM
+LIST E = 5", 6", 7", 8", 9", 10", 11", 12", 13", 14", 15", 16", 17", 18", 19", 20", 21", 22", 23", 24", 25", 26", 27", 28", 29", 30", 31", 32", 33", 34", 35"
+DIM B = 8999
+LIST H = 1,2
+
+\---------------------------------- SESSION TIMER ----------------------------------
+
+S.S.1,
+S1,
+#START: SET A=0; SET F=0; SET G=0; SET L=^ST*1"; SET M=^LT*1"; SET N=1.5"; SET O=^GP*1"; On^Light; Z1 ---> S2
+#Z3: ---> S2
+
+S2,
+0": IF A/100000 < ^SessionTime [@cont, @stop]
+	@cont: SET B(C)= ^ITI + A; ADD C; ---> S3
+	@Stop: Off^Light ---> STOPABORTFLUSH
+S3,
+0": IF G=90 [@lever, @task]
+	@lever: Z2 ---> S1
+	@task: Z4 ---> S1
+
+
+\---------------------------------- LEVER TRAINING ----------------------------------
+
+S.S.2,
+S1,
+#Z2: On^LeftOut ---> S2
+
+S2,
+#R^LeftIn: IF F > 8 [@left, @right]
+		@right: On^RightOut; Off^LeftOut; SET F = 0; ---> S3
+		@left: ADD F; On^Food ---> S4
+
+S3,
+#R^RightIn: IF F > 8 [@right, @left]
+		@right: On^LeftOut; Off^RightOut; SET F = 0; ---> S6
+		@left: ADD F; On^Food ---> S5
+
+S4,
+0.05": Off^Food; ADD G; ---> S2
+
+S5,
+0.05": Off^Food; ADD G; ---> S3
+
+S6,
+0": IF G>15 [@next, @cont]
+	@next: Off^RightOut; Z3; ---> SX
+	@cont: Off^RightOut; ---> S2
+
+
+\---------------------------------- CHOOSE NUMBER OF LEVERS ----------------------------------
+
+S.S.3,
+S1,
+#Z4: RANDI D = E; RANDI F = H; ---> S2
+S2,
+D#T: IF F = 1 [@one, @two]
+	@one: Z5 ---> S1
+	@two: Z6 ---> S1
+
+
+\---------------------------------- ONE LEVER SPLIT ----------------------------------
+
+S.S.4,
+S1,
+#Z5: ---> S2
+S2,
+0": RANDI F = H; IF F = 1 [@shorter, @longer]
+		@shorter: Z7 ---> S1
+		@longer: Z8 ---> S1
+
+
+\---------------------------------- ONE LEVER SHORTER FIRST ----------------------------------
+
+S.S.5,
+S1,
+#Z7: ---> S2
+S2,
+0": SET B(C)= ^OLS+A; ADD C; On^Tone; ---> S3			\~ToneOn(MG, BOX);~; 
+S3,
+L#T: Off^Tone; ---> S4						\~ToneOff(MG, BOX);~; 
+S4,
+N#T: On^Tone; ---> S5						\~ToneOn(MG, BOX);~; 
+S5,
+M#T: Off^Tone; ---> S6						\~ToneOff(MG, BOX);~; 
+S6,
+0": SET B(C)= ^DUN+A; ADD C; On^RightOut; ---> S7
+S7,
+#R^RightIn: On^Food; SET B(C)= ^OLS+A; ADD C; ---> S8
+O#T: Off^RightOut; SET B(C)= ^OMI + A; ADD C; Z3; ---> S1
+S8,
+0.05": Off^Food; Off^RightOut; Z3; ---> S1
+
+
+\---------------------------------- ONE LEVER LONGER FIRST ----------------------------------
+
+S.S.6,
+S1,
+#Z8: ---> S2
+S2,
+0": SET B(C)= ^OLL+A; On^Tone; ADD C; ---> S3			\~ToneOn(MG, BOX);~; 
+S3,
+M#T: Off^Tone; ---> S4						\~ToneOff(MG, BOX);~; 
+S4,
+N#T: On^Tone; ---> S5						\~ToneOn(MG, BOX);~; 
+S5,
+L#T: Off^Tone; ---> S6			\~ToneOff(MG, BOX);~; 
+S6,
+0": SET B(C)= ^DUN+A; ADD C; On^LeftOut; ---> S7
+S7,
+#R^LeftIn: On^Food; SET B(C)= ^OLL+A; ADD C; ---> S8
+O#T: Off^LeftOut; Set B(C)= ^OMI + A; ADD C; Z3; ---> S1
+S8,
+0.05": Off^Food; Off^LeftOut; Z3; ---> S1
+
+
+\---------------------------------- TWO LEVER SPLIT ----------------------------------
+
+S.S.7,
+S1,
+#Z6: ---> S2
+S2,
+0": RANDI F = H; IF F = 1 [@shorter, @longer]
+		@shorter: Z9 ---> S1
+		@longer: Z10 ---> S1
+
+
+\---------------------------------- TWO LEVER SHORTER FIRST ----------------------------------
+
+S.S.8,
+S1,
+#Z9: ---> S2
+S2,
+0": SET B(C)= ^TLS+A; ADD C; On^Tone; ---> S3			\~ToneOn(MG, BOX);~; 
+S3,
+L#T: Off^Tone; ---> S4			\~ToneOff(MG, BOX);~; 
+S4,
+N#T: On^Tone; ---> S5			\~ToneOn(MG, BOX);~; 
+S5,
+M#T: Off^Tone; ---> S6			\~ToneOff(MG, BOX);~; 
+S6,
+0": SET B(C)= ^TLS+A; ADD C; On^RightOut; On^LeftOut; ---> S7
+S7,
+#R^RightIn: On^Food; SET B(C)= ^TLS+^COR+A; ADD C; ---> S8
+#R^LeftIn: SET B(C)= ^TLS+^INC+A; ADD C; ---> S8
+O#T: Off^RightOut; Off^LeftOut; Set B(C)= ^TLS+^OMI + A; ADD C; Z3; ---> S1
+S8,
+0.05": Off^Food; Off^LeftOut; Off^RightOut; Z3; ---> S1
+
+
+\---------------------------------- TWO LEVER LONGER FIRST ----------------------------------
+
+S.S.9,
+S1,
+#Z10: ---> S2
+S2,
+0": SET B(C)= ^TLL+A; ADD C; On^Tone; ---> S3			\~ToneOn(MG, BOX);~; 
+S3,
+M#T: Off^Tone; ---> S4			\~ToneOff(MG, BOX);~; 
+S4,
+N#T: On^Tone; ---> S5			\~ToneOn(MG, BOX);~; 
+S5,
+L#T: Off^Tone; ---> S6			\~ToneOff(MG, BOX);~; 
+S6,
+0": SET B(C)= ^TLL+A; ADD C; On^RightOut; On^LeftOut; ---> S7
+S7,
+#R^RightIn: SET B(C)= ^TLL+^INC+A; ADD C; ---> S8
+#R^LeftIn: On^Food; SET B(C)= ^TLL+^COR+A; ADD C; ---> S8
+O#T: Off^LeftOut; Off^RightOut; Set B(C)= ^TLL+^OMI + A; ADD C; Z3; ---> S1
+S8,
+0.05": Off^Food; Off^LeftOut; Off^RightOut; Z3; ---> S1
+
+
+\---------------------------------- INITIALIZE SOUND CARD ----------------------------------
+
+S.S.10,									\initialize sound card
+S1,
+#START: SET U(^Freq) = 1000, U(^Amp)   = 100, U(^RF)   = 10;
+         SET U(^Dur)  = 1000---> S2
+S2,
+0":	~SetRack(MG, 1);~;                 \ The ANL-926 cards are in Rack 1
+        ~InitANL926;~;                     \ Reset ANL-926
+	~SetFreq(MG, BOX, U[0]);~;         \ Initialize Frequency
+        ~SetAmp(MG, BOX, U[1]);~;          \ Initialize Amplitude
+        ~SetRF(MG, BOX, U[2]);~;           \ Initialize Rise\Fall Time
+\       ~SetDur(MG, BOX, U[3]);~;          \ Initialize Duration
+	---> S3
+S3,
+0": ---> SX
+
+
+\---------------------------------- SESSION TIMER ----------------------------------
+
+S.S.11,
+
+S1,
+
+#Z1:---> S2
+
+S2,
+
+.01": SET A = A+1000; ---> SX \ Keep the time in 100th of a second
