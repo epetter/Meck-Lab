@@ -1,0 +1,207 @@
+\ Fixed Interval FI Procedure for the Boxes in Room 3071 20150608 Edited by Nick Lusk
+\ *** 10 Second FI *** /
+\ *** Random ITI 20 - 100 Sec *** /
+
+
+\constant
+
+\plexon signals
+\17 Tone On
+\18 Tone Off
+\19 Lever Extend
+\20 Response
+\21 Left Res
+\22 Right Res
+\23 House Light On/ Off
+\24 Lever Retract
+\25 FI Trial
+\26 PI Trial
+\27
+\28
+\29
+\30
+
+
+^SessionTime = 7200  \ seconds
+
+^RightLever = 1
+^LeftLever = 2
+^HeadEntry = 3
+^MiddleLever= 4
+^BurstRight = 5
+^BurstLeft = 6
+
+^ITI = 10
+^NoiseFI = 20
+^NoiseProbe = 30
+^FI = 20
+
+
+^LeverExtended = 400
+^LeverRetracted = 500
+
+
+\inputs
+
+^LELEV = 1
+^RILEV = 2
+^MILEV = 3
+^PHOTO = 4
+
+\outputs
+
+^RELEFT = 2
+^RERIGHT = 3
+^PELLET = 8
+^HOLIGHT = 1
+
+
+LIST J = 2, 2.25, 2.5, 2.75, 3, 3.25, 3.5, 3.75	4, 4.25, 4.5, 4.75, 5, 5.25, 5.5, 5.75, 6 \ 2x to 6x the FI length
+LIST H = 1, 2 \ FI or probe
+
+
+DIM W = 5000 \Leverresp times
+DIM U = 349 \ITI Length
+
+
+DISKFORMAT= 9.0
+DISKVARS= W, U
+
+\Variables
+\A= Trial Number
+\B=
+\C= Middle Lever
+\D=
+\E= Event Indicator
+\F= Food Port Entry
+\G= Delay for omission
+\H= List for FI or Probe Trial
+\I= Value Drawn from List H
+\J= List of ITI Durations
+\K= Value Drawn from List J
+\L=
+\M= Timer
+\N=
+\O= Omissions
+\P=
+\Q=
+\R= Right Lever Counter
+\S= Left Lever Counter
+\T=
+\U= Array for ITI Durations
+\V= Element for Array U
+\W= Master Array for all Events
+\X= Element for Array W
+\Y=
+\Z=
+
+\ZPulses
+
+\Z1: Timer
+\Z2: Response Lever Count
+\Z3: Middle Lever Count
+
+\Display
+
+\SHOW 1 = Trial Number
+\SHOW 2 = Left Press Count
+\SHOW 3 = Right Press Count
+\SHOW 4 = Middle Press Count
+\SHOW 5 = Omissions Count
+
+S.S.1, \Main program
+
+S1,
+
+#START: SET A = 0; SET B = 0; SET C = 0; SET E = 0; SET F = 0; SET G = 0; SET K = 0; SET P = ^FI*1"; SET Q = 3*P; SET V = 0; SET X = 0; On^HOLIGHT; On 23; On^RELEFT; On^RERIGHT; On 19; Z1; Z2; Z3 ---> S2
+
+S2,
+.5": Off^RELEFT; OffF^RERIGHT; ---> S9
+
+S9,
+0": IF M/100000 < ^SessionTime [@cont, @stop]
+    @cont: Off 17; Off 18; Off 19; Off 20; Off 21; Off 22; Off 23; Off 24; Off 25; Off 26;RANDI K = J; RANDI I = H; SET E = ^ITI; SET W(X)= E + M; SET U(V)= K; ADD V; ADD X; ADD A; SHOW 1, Trial, A ---> S3
+    @Stop: Off^HOLIGHT; On 23; ---> STOPABORTFLUSH
+
+S3,
+
+K#T: IF I > 1 [@FI, @PP]
+    @FI: ~ToneOn(MG, Box);~; On 25; On 17; SET E = ^NoiseFI; SET W(X) = E + ^LeverExtended + M; ADD X ---> S5
+    @PP: ~ToneOn(MG, Box);~; On 26; On 17; SET E = ^NoiseProbe; SET W(X) = E + ^LeverExtended + M; ADD X ---> S4
+
+S4,
+
+Q#T: ~ToneOff(MG, Box);~; On 18; SET W(X) = E + ^LeverRetracted + M; ADD X ---> S2
+
+S5,
+
+P#T": SET G = M; On^Pellet; ~ToneOff(MG, Box);~; ---> S6
+
+S6,
+
+0.05": On 18; SET W(X) = E + ^LeverRetracted + M; ADD X; Off^Pellet ---> S2
+
+
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ S.S.2 ///////////////////////////////////////
+
+
+
+S.S.2, \Tone
+
+S1,  \ initialize sound card and control variables
+#Start: ~InitANL926;~;                       \ reset ANL-926
+        ~SetFreq(MG, BOX, 0);~;              \ initialize frequency to white noise
+        ~SetAmp(MG, BOX, 88);~;              \ initialize amplitude to 88 db (same as Cordes et al. 2014)
+        ~SetRF(MG, BOX, 10);~;               \ initialize rise/fall time to 10 ms
+        --->SX
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ S.S.3 ////////////////////////////////////////
+
+
+
+S.S.3, \Lever Press Counter
+
+S1,
+
+#Z2: ---> S2
+
+S2,
+
+#R^LELEV: SET W(X) = E + ^LeftLever + M; On 21; ADD X; ADD R; SHOW 2,  Left Presses, R ---> SX
+#R^RILEV: SET W(X) = E + ^RightLever + M; On 22; ADD X; ADD S; SHOW 3, Right Presses, S ---> SX
+
+
+0": IF M/100000 < ^SessionTime [@cont, @stop] \ Resetting lever press counter... TTL pulse needs to be at least 250us
+	@cont: Off 21; Off 22;---> SX 
+	@stop: Off 21; Off 22;---> SX 
+
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ S.S.4 /////////////////////////////////////////
+
+
+S.S.4, \Food Port Entry
+
+S1,
+
+#Z3:--->S2
+
+S2,
+
+#R^MILEV: SET W(X) = E + ^MiddleLever + M; ADD X; ADD C; SHOW 4, HeadEntry, C ---> SX
+
+
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\ S.S.5 //////////////////////////////////////////
+
+
+S.S.5, \ Timer
+
+S1,
+
+#Z1:---> S2
+
+S2,
+
+.01": SET M = M+1000; ---> SX \ Keep the time in 100th of a second
+
