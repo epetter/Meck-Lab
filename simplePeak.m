@@ -30,6 +30,8 @@ function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, 
     %Relevant Data Columns
     relevantColumns = 2:6; %This is to get rid of unecessary markers
     
+    timeConversion = 100; %this is to get the data in seconds
+ 
     % Range of Error
     rangeOfError = 4; %half to amount of seconds you are willing to have the raw peak time vary from the peak time summed across three bins
      
@@ -112,7 +114,6 @@ if probe == 1;
 
 %% Binning Events
 
- timeConversion = 100; %this is to get the data in seconds
  
  maxResponseTime = max(sortProbeTimes); % Finding the maximum time after probe start that there was a lev press
  minResponseTime = 0;
