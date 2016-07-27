@@ -1,4 +1,4 @@
-function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, peakTime, FITime ] = simplePeak(folder, fnameRoot )
+function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, peakTime, FITime ] = simplePeak(folder, fnameRoot, probe )
     %Simple Peak Analysis
     %   This is designed to open up single Peak Files and analyze the data.
     %   It will do it for both FI and Peak Trials
@@ -12,7 +12,6 @@ function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, 
     
    % folder = 'test'; % The folder the data is contained in
    % fnameRoot = 'C:\Users\Elijah\Documents\BradPeakSampleData'; % The file name root; These are sepearted because generally you have most of your data in the fnameRoot and can then just easily switch between folders
-    
     
     %% Begining Variables 
 
@@ -79,6 +78,14 @@ function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, 
  
     %% Probe Trials
     
+if exist('probe');
+    probe = probe;
+else
+    probe = 0;
+end
+    
+if probe == 1;    
+    
     probeLevInd = find(EventMat == probeLevPress); % Indicies of probe lev presses
     probeStartInd = find(EventMat == probeTrialStart); % Indicies of probe trial starts
     probeEndInd = find(EventMat == probeTrialEnd); % Indicies of probe trial ends
@@ -130,6 +137,7 @@ function [ normEventsPerBin, eventsPerBin, normFI_EventsPerBin, FIeventsPerBin, 
     
  
  end
+
 %% Possible way to find the peakTime summed across three bins
     % Essentially this is just a way to increase your accuracy and avoid
     % picking a random time of high responding. It shouldn't be a problem
@@ -151,6 +159,8 @@ end
 
 if ((rawPeakInd - rangeOfError) < peakTime) && (peakTime < (rawPeakInd + rangeOfError)); 
     disp('peak time accurate');
+end
+
 end
 
 %% FI Trials
